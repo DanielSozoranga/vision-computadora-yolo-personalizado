@@ -1,0 +1,30 @@
+# Entornos virtuales
+vision-yolo-pers/
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Secretos: aqui va la clave de Roboflow, nunca se sube
+.env
+
+# Modelos y resultados de entrenamiento (se regeneran al ejecutar el notebook)
+*.pt
+runs/
+
+# Dataset descargado de Roboflow (se vuelve a descargar con el notebook)
+datasets/
+
+# Videos (los que grabas para sacar fotos y los generados): pesan mucho, se conservan solo las fotos
+data/videos/
+reports/*.mp4
+reports/*.avi
+
+# Sistema
+.DS_Store
+Thumbs.db

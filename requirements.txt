@@ -1,0 +1,11 @@
+ultralytics
+opencv-python
+roboflow
+python-dotenv
+numpy
+matplotlib
+pillow
+jupyter
+ipykernel
+nbformat
+nbconvert
