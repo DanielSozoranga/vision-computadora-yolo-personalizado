@@ -98,7 +98,7 @@ def run(modelo=DEFAULT_MODEL, camara=0, conf=0.5, imgsz=640, carpeta_capturas=RO
         if key == ord("q"):
             break
         if key == ord("s"):
-            path = carpeta_capturas / f"webcam_{time.strftime('%Y%m%d_%H%M%S')}.jpg"
+            path = carpeta_capturas / f"webcam_{time.strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000) % 1000:03d}.jpg"
             cv2.imwrite(str(path), annotated)
             print("captura guardada:", path.name)
 

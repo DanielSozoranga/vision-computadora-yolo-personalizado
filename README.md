@@ -32,6 +32,46 @@ Las fotos originales están en `data/fotos/`, una carpeta por tipo:
 
 En total son 92 imágenes. Las fotos de `juntos` enseñan al modelo a separar los objetos cuando aparecen a la vez, y las de `fondo` reducen las detecciones falsas.
 
+Se anotaron 88 imágenes en Roboflow, con una caja por objeto y su clase. La versión 2 del dataset las reparte en 70 % entrenamiento, 20 % validación y 10 % prueba, redimensiona a 640 x 640 y aplica tres aumentos de datos (brillo de -25 % a +25 %, rotación de -10° a +10° y desenfoque de hasta 1 px) con un multiplicador de 3x sobre el conjunto de entrenamiento.
+
+| Conjunto | Imágenes | `termo` | `mando` | `plancha` |
+|---|---|---|---|---|
+| Entrenamiento | 186 | 108 cajas | 99 cajas | 84 cajas |
+| Validación | 18 | 10 cajas | 12 cajas | 8 cajas |
+| Prueba | 8 | 6 cajas | 2 cajas | 4 cajas |
+
+## Resultados
+
+El modelo se entrenó durante 50 épocas con YOLO26 nano, imágenes de 640 x 640 y lotes de 8. Las métricas se midieron sobre las 8 imágenes de prueba, que el modelo no vio al entrenar.
+
+| Clase | Precisión | Recall | mAP50 | mAP50-95 |
+|---|---|---|---|---|
+| Global | 0.962 | 1.000 | 0.995 | 0.856 |
+| `mando` | 0.916 | 1.000 | 0.995 | 0.821 |
+| `plancha` | 0.978 | 1.000 | 0.995 | 0.908 |
+| `termo` | 0.992 | 1.000 | 0.995 | 0.839 |
+
+Con la confianza de uso normal (0.25), el modelo reconoce con su clase correcta los 12 objetos de las imágenes de prueba, y solo produce una detección de `termo` sobre el fondo. La matriz de confusión, la curva precisión-recall, las curvas de entrenamiento y las pruebas sobre imágenes están en `reports/`.
+
+Las fotos de entrenamiento y de prueba salen de los mismos videos, por lo que se parecen entre sí y las métricas resultan altas. La prueba más exigente es la detección en tiempo real con la webcam, que trabaja con imágenes completamente nuevas.
+
+### Detección en tiempo real
+
+Con la webcam, el modelo reconoce los tres objetos a unos 30 cuadros por segundo en CPU, en distintas posturas, distancias y ángulos, con la mano y sin ella. Cada captura muestra las cajas con su clase y confianza, y el panel con el contador por clase y los cuadros por segundo.
+
+Un objeto a la vez:
+
+| Mando | Termo | Plancha |
+|---|---|---|
+| ![Mando](reports/webcam_mando.jpg) | ![Termo en la mano](reports/webcam_termo_1.jpg) | ![Plancha de lado](reports/webcam_plancha_1.jpg) |
+| | ![Termo acostado](reports/webcam_termo_2.jpg) | ![Suela de la plancha](reports/webcam_plancha_2.jpg) |
+
+Dos objetos a la vez, cada uno con su clase y su caja:
+
+| Termo y plancha | Mando y termo | Mando y plancha |
+|---|---|---|
+| ![Termo y plancha](reports/webcam_termo_plancha.jpg) | ![Mando y termo](reports/webcam_mando_termo.jpg) | ![Mando y plancha](reports/webcam_mando_plancha.jpg) |
+
 ## Estructura del proyecto
 
 ```
