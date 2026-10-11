@@ -25,6 +25,21 @@ data/videos/
 reports/*.mp4
 reports/*.avi
 
+# Privacidad: fotos donde aparece el rostro del autor, o parte de este (104). Se quedan en el equipo local, no se suben al repositorio
+data/para_subir/webcam_fondo_00[7-9].jpg
+data/para_subir/webcam_fondo_0[1-5][0-9].jpg
+data/para_subir/webcam_fondo_06[0-2].jpg
+data/para_subir/webcam_gato_cuarto_00[1-9].jpg
+data/para_subir/webcam_gato_cuarto_01[01].jpg
+data/para_subir/webcam_gato_cuarto_03[1-7].jpg
+data/para_subir/webcam_plancha_cuarto_00[1-4].jpg
+data/para_subir/webcam_plancha_cuarto_01[0-2].jpg
+data/para_subir/webcam_plancha_cuarto_02[5-9].jpg
+data/para_subir/webcam_termo_cuarto_00[1-9].jpg
+data/para_subir/webcam_termo_cuarto_010.jpg
+data/para_subir/webcam_termo_cuarto_01[4-6].jpg
+data/para_subir/webcam_termo_cuarto_02[2-6].jpg
+
 # Sistema
 .DS_Store
 Thumbs.db

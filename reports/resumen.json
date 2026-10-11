@@ -1,0 +1,68 @@
+{
+  "clases": [
+    "gato",
+    "plancha",
+    "termo"
+  ],
+  "dataset": {
+    "train": {
+      "imagenes": 868,
+      "cajas": {
+        "termo": 306,
+        "gato": 342,
+        "plancha": 315
+      }
+    },
+    "valid": {
+      "imagenes": 83,
+      "cajas": {
+        "plancha": 36,
+        "termo": 18,
+        "gato": 27
+      }
+    },
+    "test": {
+      "imagenes": 41,
+      "cajas": {
+        "termo": 13,
+        "gato": 19,
+        "plancha": 15
+      }
+    }
+  },
+  "entrenamiento": {
+    "modelo_base": "yolo26n.pt",
+    "epocas": 50,
+    "imgsz": 960,
+    "batch": 8
+  },
+  "evaluacion": {
+    "conjunto": "test",
+    "global": {
+      "P": 0.9961033046463825,
+      "R": 1.0,
+      "mAP50": 0.995,
+      "mAP50-95": 0.9350496493874203
+    },
+    "por_clase": {
+      "gato": {
+        "P": 1.0,
+        "R": 1.0,
+        "mAP50": 0.995,
+        "mAP50-95": 0.8910207430340558
+      },
+      "plancha": {
+        "P": 0.9945455537404069,
+        "R": 1.0,
+        "mAP50": 0.995,
+        "mAP50-95": 0.9326666666666666
+      },
+      "termo": {
+        "P": 0.9937643601987405,
+        "R": 1.0,
+        "mAP50": 0.995,
+        "mAP50-95": 0.9814615384615385
+      }
+    }
+  }
+}

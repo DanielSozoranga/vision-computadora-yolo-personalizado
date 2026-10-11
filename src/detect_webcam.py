@@ -14,6 +14,7 @@ y un panel con el contador por clase y los cuadros por segundo.
 """
 import argparse
 import os
+import threading
 import time
 from collections import Counter
 from pathlib import Path
@@ -26,6 +27,43 @@ DEFAULT_MODEL = ROOT / "runs" / "custom_yolo_model" / "weights" / "best.pt"
 
 # Un color BGR por clase (se repiten si hay mas clases que colores)
 COLORS = [(0, 255, 0), (0, 255, 255), (255, 0, 255), (255, 160, 0), (0, 140, 255), (255, 255, 0)]
+
+
+class LectorReciente:
+    """Lee la camara en un hilo y guarda solo el cuadro mas nuevo.
+
+    Una camara de red entrega cuadros mas rapido de lo que el modelo los procesa y OpenCV los acumula en una cola,
+    de modo que la imagen llega con segundos de retraso. Descartar los cuadros viejos elimina ese retraso.
+    """
+
+    def __init__(self, cap):
+        self.cap = cap
+        self.frame = None
+        self.nuevo = False
+        self.activo = True
+        self.lock = threading.Lock()
+        threading.Thread(target=self._leer, daemon=True).start()
+
+    def _leer(self):
+        while self.activo:
+            ok, frame = self.cap.read()
+            if not ok:
+                self.activo = False
+                break
+            with self.lock:
+                self.frame, self.nuevo = frame, True
+
+    def read(self):
+        """Devuelve (ok, cuadro mas reciente); espera si todavia no llega ninguno nuevo."""
+        while self.activo and not self.nuevo:
+            time.sleep(0.002)
+        with self.lock:
+            self.nuevo = False
+            return self.frame is not None, self.frame
+
+    def release(self):
+        self.activo = False
+        self.cap.release()
 
 
 def procesar(frame, model, conf=0.5, imgsz=640):
@@ -62,19 +100,26 @@ def dibujar_panel(frame, model, counts, fps):
     return frame
 
 
-def run(modelo=DEFAULT_MODEL, camara=0, conf=0.5, imgsz=640, carpeta_capturas=ROOT / "reports"):
+def run(modelo=DEFAULT_MODEL, camara=0, conf=0.35, imgsz=960, carpeta_capturas=ROOT / "reports"):
     """Abre la webcam y detecta en tiempo real hasta que se pulsa Q."""
     modelo = Path(modelo)
     if not modelo.exists():
         raise SystemExit(f"No se encontro el modelo entrenado en {modelo}. Ejecuta antes el notebook de entrenamiento.")
     model = YOLO(str(modelo))
 
-    backend = cv2.CAP_DSHOW if os.name == "nt" else cv2.CAP_ANY       # DSHOW abre mas rapido en Windows
+    # "camara" puede ser un indice (0, 1, 2...) o la direccion de una camara de red, por ejemplo la de un celular
+    if isinstance(camara, str) and camara.isdigit():
+        camara = int(camara)
+    es_red = isinstance(camara, str)
+    backend = cv2.CAP_DSHOW if os.name == "nt" and not es_red else cv2.CAP_ANY    # DSHOW abre mas rapido en Windows
     cap = cv2.VideoCapture(camara, backend)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    if not es_red:
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     if not cap.isOpened():
-        raise SystemExit("No se pudo abrir la camara. Prueba con camara=1 o cierra otras apps que la usen.")
+        raise SystemExit("No se pudo abrir la camara. Prueba con otro indice (1, 2) o revisa la direccion de red.")
+    if es_red:
+        cap = LectorReciente(cap)       # evita que la camara de red acumule retraso
 
     carpeta_capturas = Path(carpeta_capturas)
     carpeta_capturas.mkdir(exist_ok=True)
@@ -98,7 +143,7 @@ def run(modelo=DEFAULT_MODEL, camara=0, conf=0.5, imgsz=640, carpeta_capturas=RO
         if key == ord("q"):
             break
         if key == ord("s"):
-            path = carpeta_capturas / f"webcam_{time.strftime('%Y%m%d_%H%M%S')}.jpg"
+            path = carpeta_capturas / f"webcam_{time.strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000) % 1000:03d}.jpg"
             cv2.imwrite(str(path), annotated)
             print("captura guardada:", path.name)
 
@@ -109,8 +154,9 @@ def run(modelo=DEFAULT_MODEL, camara=0, conf=0.5, imgsz=640, carpeta_capturas=RO
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Deteccion en tiempo real con la webcam.")
     parser.add_argument("--modelo", default=str(DEFAULT_MODEL), help="ruta del modelo entrenado (best.pt)")
-    parser.add_argument("--camara", type=int, default=0, help="indice de la camara (0 es la predeterminada)")
-    parser.add_argument("--conf", type=float, default=0.5, help="confianza minima para mostrar una deteccion")
-    parser.add_argument("--imgsz", type=int, default=640, help="tamano de analisis")
+    parser.add_argument("--camara", default="0",
+                        help="indice de la camara (0 es la predeterminada) o direccion de red, ej. http://192.168.1.50:8080/video")
+    parser.add_argument("--conf", type=float, default=0.35, help="confianza minima para mostrar una deteccion")
+    parser.add_argument("--imgsz", type=int, default=960, help="tamano de analisis")
     args = parser.parse_args()
     run(args.modelo, args.camara, args.conf, args.imgsz)
